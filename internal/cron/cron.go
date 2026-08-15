@@ -214,8 +214,10 @@ func resolveValue(s string, min, max int, names map[string]int) (int, error) {
 func (e *Expr) Next(from time.Time) (time.Time, error) {
 	loc := from.Location()
 	// 起始候选：from 所在分钟的下一分钟整（保证严格晚于 from）。
+	// from 恰在分钟整点时截断后 t==from，Before 为假会导致返回 from 本身，
+	// 故用 !t.After(from) 覆盖 t==from 的情形，确保候选严格晚于 from。
 	t := time.Date(from.Year(), from.Month(), from.Day(), from.Hour(), from.Minute(), 0, 0, loc)
-	if t.Before(from) {
+	if !t.After(from) {
 		t = t.Add(time.Minute)
 	}
 	limit := from.Add(searchLimit)
